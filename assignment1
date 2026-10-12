@@ -1,0 +1,31 @@
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.exceptions import InvalidSignature
+
+private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+public_key = private_key.public_key()
+print("Step 1: RSA key pair (2048-bit) generated")
+
+
+message = b"Transfer $1000 to Mark"
+signature = private_key.sign(
+    message,
+    padding.PKCS1v15(),
+    hashes.SHA256()
+)
+print("Step 2: Message  :", message.decode())
+print("        Signature (first 40 hex chars):", signature.hex()[:40], "...")
+
+
+def verify(msg, sig):
+    try:
+        public_key.verify(sig, msg, padding.PKCS1v15(), hashes.SHA256())
+        return "VALID signature"
+    except InvalidSignature:
+        return "INVALID signature"
+
+print("Step 3: Verify original message ->", verify(message, signature))
+
+
+fake_message = b"Transfer $1000 to Oscar"
+print("Step 4: Verify changed message  ->", verify(fake_message, signature))
